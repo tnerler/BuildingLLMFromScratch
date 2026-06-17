@@ -55,7 +55,7 @@ class SelfAttentionV2(nn.Module):
             attention_scores / keys.shape[-1] ** 0.5, dim=-1
         )
         context_vec = attention_weights @ values 
-        return context_vec  
+        return context_vec 
 
 
 
@@ -76,8 +76,51 @@ if __name__ == "__main__":
      [0.05, 0.80, 0.55]] # step (x^6)
     )
 
+    print(f"Self Attention 1 which is initalized weights with nn.Parameter(): \n")
     sa_v1 = SelfAttentionV1(d_in, d_out)
     print(sa_v1(inputs))
     print("*"*50)
+
+    print(f"Self Attention 2 which is initalized weights with nn.Linear(): \n")
     sa_v2 = SelfAttentionV2(d_in, d_out)
     print(sa_v2(inputs))
+
+    print("="*50)
+    print(f"Assignin' the weights from an instance of SelfAttentionV2 to an instance of SelfAttentionV1.")
+
+
+    print("Initalizing the weights from an instance SelfAttentionV2")
+
+    weight_key_from_2 = sa_v2.W_key.weight.T # (2x3)
+    weight_query_from_2 = sa_v2.W_query.weight.T  # (2x3)
+    weight_value_from_2 = sa_v2.W_value.weight.T  # (2x3)
+
+    print(f"Initalized the weight.")
+    print(f"`Key Weight` from an instace of SelfAttentionV2:\n {weight_key_from_2}")
+    print(f"`Query Weight` from an instace of SelfAttentionV2:\n {weight_query_from_2}")
+    print(f"`Value Weight` from an instace of SelfAttentionV2:\n {weight_value_from_2}")
+
+
+    print("Assigning these weights to an instance of SelfAttentionV1")
+
+    sa_v1.W_key.data = weight_key_from_2
+    sa_v1.W_query.data = weight_query_from_2
+    sa_v1.W_value.data = weight_value_from_2
+
+    print("Assigned the weights to SelfAttentionV1")
+    print(f"Initalized the weight.")
+    print(f"`Key Weight` from an instace of SelfAttentionV1: {sa_v1.W_key}")
+    print(f"`Query Weight` from an instace of SelfAttentionV1: {sa_v1.W_query}")
+    print(f"`Value Weight` from an instace of SelfAttentionV1: {sa_v1.W_value}")
+
+
+    print("Implementing the same inputs\n\n")
+
+    print("SelfAttentionV1 with inputs:\n")
+    print(sa_v1(inputs))
+
+    print("SelfAttentionV2 with inputs")
+    print(sa_v2(inputs))
+
+    print("Being sure if these are the same results\nSince we assign the weights from the V2 to V1")
+    print(torch.allclose(sa_v1(inputs), sa_v2(inputs)))
