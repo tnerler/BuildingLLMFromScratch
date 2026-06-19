@@ -15,18 +15,20 @@ class CausalAttention(Module):
         self.register_buffer(
             'mask', 
             torch.triu(torch.ones(context_length, context_length),
-            diagonal=1)
+            diagonal=1) # register_buffer which we use to store the masks, it includes in the model's state_dict but not include 
+                        # as the model parameter to train it. So, we do not want to train the mask tensor but we want to store it
+                        # to use, so we store it like this.
         )
 
     def forward(self, x): 
-        batch, num_tokens, d_in = x.shape
+        _, num_tokens, _ = x.shape
 
         keys = self.W_key(x)
         queries = self.W_query(x)
         values = self.W_value(x)
 
         attn_scores = queries @ keys.transpose(-1, -2)
-        attn_scores.masked_fill(
+        attn_scores.masked_fill_(
             self.mask.bool()[:num_tokens, :num_tokens], -torch.inf
         )
         attn_weights = torch.softmax(
