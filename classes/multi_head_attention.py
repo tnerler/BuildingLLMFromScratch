@@ -2,17 +2,17 @@ import torch
 from torch import nn 
 
 class MultiHeadAttention(nn.Module): 
-    def __init__(self, d_model, context_length, num_heads, dropout, bias=False): 
+    def __init__(self, d_in, d_out, context_length, num_heads, dropout, qkv_bias=False): 
         super().__init__()
-        assert d_model % num_heads == 0, "d_model must be divisable by num_heads"
+        assert d_out % num_heads == 0, "d_model must be divisable by num_heads"
         self.num_heads = num_heads
-        self.d_model = d_model 
-        self.head_dim = self.d_model // self.num_heads
+        self.d_out = d_out
+        self.head_dim = self.d_out // self.num_heads
 
-        self.W_k = nn.Linear(d_model, d_model, bias=bias)
-        self.W_q = nn.Linear(d_model, d_model, bias=bias)
-        self.W_v = nn.Linear(d_model, d_model, bias=bias)
-        self.W_o = nn.Linear(d_model, d_model)
+        self.W_k = nn.Linear(d_in, d_out, bias=qkv_bias)
+        self.W_q = nn.Linear(d_in, d_out, bias=qkv_bias)
+        self.W_v = nn.Linear(d_in, d_out, bias=qkv_bias)
+        self.W_o = nn.Linear(d_out, d_out)
 
         self.dropout = nn.Dropout(dropout)
         self.register_buffer(
@@ -56,7 +56,7 @@ class MultiHeadAttention(nn.Module):
 
         # compute the context vec
         context_vecs = (attn_weights @ values).transpose(1, 2)
-        context_vecs = context_vecs.contiguous().view(batch_size, seq_length, self.d_model)
+        context_vecs = context_vecs.contiguous().view(batch_size, seq_length, self.d_out)
         context_vecs = self.W_o(context_vecs)
         return context_vecs
 
